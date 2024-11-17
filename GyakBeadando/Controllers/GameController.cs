@@ -18,11 +18,10 @@ namespace GyakBeadando.Controllers
             _context = context;
         }
 
-        // get all games
         [HttpGet("games")]
-        public IActionResult GetGames()
+        public IActionResult GetAllGames()
         {
-            var games = _context.Games;
+            var games = _context.Games.OrderBy(g => g.Id);
 
             if(games == null)
             {
@@ -33,7 +32,6 @@ namespace GyakBeadando.Controllers
             }
         }
 
-        // get game by id
         [HttpGet("games/{id}")]
         public IActionResult GetGameById(int id)
         {
@@ -47,7 +45,6 @@ namespace GyakBeadando.Controllers
             }
         }
 
-        // add new game
         [HttpPost("games/add-game")]
         public async Task<IActionResult> AddGame([FromBody] Game newGame)
         {
@@ -61,10 +58,10 @@ namespace GyakBeadando.Controllers
             return CreatedAtAction(nameof(GetGameById), new {id = newGame.Id}, newGame);
         }
 
-        // delete game by id
         [HttpDelete("games/delete-game/{id}")]
-        public async Task<IActionResult> DeleteGame(int id)
+        public async Task<IActionResult> DeleteGameById(int id)
         {
+            // It MUST not delete the dummy data
             if(id <= 16)
             {
                 return BadRequest("Id must be greater than 16.");
@@ -83,5 +80,19 @@ namespace GyakBeadando.Controllers
             return NoContent();
         }
 
+        [HttpPatch("games/isplayed/{id}")]
+        public async Task<IActionResult> ChangeIsPlayedById(int id, [FromBody] bool isPlayed)
+        {
+            var game = await _context.Games.FindAsync(id);
+
+            if (game == null) return NotFound();
+
+            game.Isplayed = isPlayed;
+
+            _context.Entry(game).Property(e => e.Isplayed).IsModified = true;
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
     }
 }
